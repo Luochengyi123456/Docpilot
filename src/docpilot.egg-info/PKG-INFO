@@ -1,0 +1,189 @@
+Metadata-Version: 2.4
+Name: docpilot
+Version: 0.1.0
+Summary: AI assistant for generating project documentation and committing it to Git
+License: MIT
+Keywords: docs,git,cli,ai
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: click<9,>=8.1
+Requires-Dist: openai>=1.0.0
+Provides-Extra: openai
+Requires-Dist: openai>=1.0.0; extra == "openai"
+Provides-Extra: test
+Requires-Dist: pytest>=8.0; extra == "test"
+
+# DocPilot
+
+一个很小的文档生成与提交工具，用来在当前项目中快速生成 `README.md` 并可选提交到 Git。
+
+## 功能
+
+- 扫描当前项目，生成基础 README
+- 支持模板模式，适合小项目快速使用
+- 支持 OpenAI 兼容 LLM 模式，可选生成更自然的文档
+- 支持 DeepSeek API 接入
+- 支持生成后自动 `git commit`
+- 可选 `git push`
+
+## 安装
+
+在项目根目录执行：
+
+```bash
+pip install -e .
+```
+
+如果你想运行测试：
+
+```bash
+pip install -e .[test]
+```
+
+如果你要使用 OpenAI 或 DeepSeek LLM 模式：
+
+```bash
+pip install -e .
+```
+
+如果你的环境里还没装 `openai`，也可以单独安装：
+
+```bash
+pip install openai
+```
+
+> 说明：当前版本已把 `openai` 纳入基础依赖，因此只要安装项目本身即可直接使用 OpenAI 兼容接口和 DeepSeek。
+
+## 使用方式
+
+### 1. 在当前项目生成 README
+
+进入目标项目目录后执行：
+
+```bash
+docpilot generate
+```
+
+这会在**当前目录**生成或覆盖 `README.md`。
+
+### 2. 使用 DeepSeek 生成 README
+
+```bash
+export DEEPSEEK_API_KEY=your_api_key
+export DEEPSEEK_BASE_URL=https://api.deepseek.com
+export DOCPILOT_LLM_MODEL=deepseek-chat
+
+docpilot generate
+```
+
+如果你想显式指定，也可以：
+
+```bash
+docpilot generate --provider deepseek
+```
+
+### 3. 使用 OpenAI 兼容接口生成 README
+
+```bash
+export OPENAI_API_KEY=your_api_key
+export OPENAI_BASE_URL=https://api.openai.com/v1
+export DOCPILOT_LLM_MODEL=gpt-4o-mini
+
+docpilot generate
+```
+
+如果你想显式指定，也可以：
+
+```bash
+docpilot generate --provider openai
+```
+
+### 4. 生成并提交
+
+```bash
+docpilot run
+```
+
+默认会使用提交信息 `docs: update README`。
+
+### 5. 生成、提交并推送
+
+```bash
+docpilot run --auto-push
+```
+
+执行到 push 前会询问是否继续，输入 `y` / `n` 确认。
+
+## LLM 模式
+
+默认情况下，DocPilot 会优先使用你已经配置好的大模型生成 README；如果没有检测到可用 API Key，才会退回模板模式。
+
+`openai` 和 `deepseek` 都走 OpenAI 兼容协议，只需要配置不同的 API Key 和 Base URL。
+
+### DeepSeek 示例
+
+```bash
+export DOCPILOT_LLM_PROVIDER=deepseek
+export DEEPSEEK_API_KEY=your_api_key
+export DEEPSEEK_BASE_URL=https://api.deepseek.com
+export DOCPILOT_LLM_MODEL=deepseek-chat
+
+python -m docpilot generate --provider deepseek
+```
+
+### OpenAI 示例
+
+```bash
+export DOCPILOT_LLM_PROVIDER=openai
+export OPENAI_API_KEY=your_api_key
+export OPENAI_BASE_URL=https://api.openai.com/v1
+export DOCPILOT_LLM_MODEL=gpt-4o-mini
+
+python -m docpilot generate --provider openai
+```
+
+## 在别的项目里怎么用
+
+这个工具是“当前目录驱动”的。
+
+你在哪个项目目录里执行，它就作用于哪个项目：
+
+```bash
+cd /path/to/another-project
+docpilot generate
+```
+
+它会直接生成：
+
+```bash
+/path/to/another-project/README.md
+```
+
+## 命令说明
+
+- `docpilot generate`：只生成 README
+- `docpilot generate --commit`：生成后自动提交
+- `docpilot generate --commit --auto-push`：生成后提交并推送
+- `docpilot commit --msg "..."`：提交当前仓库变更
+- `docpilot run`：先生成 README，再提交，默认提交信息为 `docs: update README`
+- `docpilot run --auto-push`：提交后询问是否 push
+- `--template <file>`：使用自定义模板文件生成 README
+- `--provider template|openai|deepseek`：指定生成器
+
+## 开发
+
+```bash
+pytest
+```
+
+## 说明
+
+这是一个轻量工具，目标是满足小项目的基础文档自动化需求，而不是做成复杂平台。

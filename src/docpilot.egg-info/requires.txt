@@ -1,0 +1,8 @@
+click<9,>=8.1
+openai>=1.0.0
+
+[openai]
+openai>=1.0.0
+
+[test]
+pytest>=8.0
